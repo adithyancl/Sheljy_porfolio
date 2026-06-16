@@ -1,4 +1,5 @@
 import './style.css';
+import './form.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   
