@@ -153,4 +153,56 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   }
+
+  // --- Training videos: play 10s segment from middle, muted, looped ---
+  const initTrainingVideos = () => {
+    const videos = document.querySelectorAll('.video-container video');
+    videos.forEach(video => {
+      // Ensure muted and inline playback (helps autoplay on mobile when muted)
+      video.muted = true;
+      video.playsInline = true;
+      video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', '');
+
+      const SEG_LEN = 10; // seconds
+
+      const setupSegment = () => {
+        const dur = video.duration || 0;
+        if (!dur || isNaN(dur) || dur <= 0.1) return;
+        const start = Math.max(0, dur / 2 - SEG_LEN / 2);
+        const end = Math.min(dur, start + SEG_LEN);
+
+        // Jump to start of the 10s segment
+        try {
+          video.currentTime = start;
+        } catch (e) {
+          // some browsers disallow setting currentTime before user gesture
+        }
+
+        // On timeupdate, loop the segment
+        const onTime = () => {
+          if (video.currentTime >= end - 0.15) {
+            video.currentTime = start;
+            // continue playing
+            video.play().catch(()=>{});
+          }
+        };
+
+        video.removeEventListener('timeupdate', onTime);
+        video.addEventListener('timeupdate', onTime);
+
+        // Try to autoplay the segment (muted helps)
+        video.play().catch(()=>{});
+      };
+
+      // If metadata already loaded
+      if (video.readyState >= 1) {
+        setupSegment();
+      } else {
+        video.addEventListener('loadedmetadata', setupSegment);
+      }
+    });
+  };
+
+  initTrainingVideos();
 });
